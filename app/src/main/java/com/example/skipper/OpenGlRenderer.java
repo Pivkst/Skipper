@@ -71,7 +71,6 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
 
     private boolean malletPressed = false;
     private Geometry.Point redMalletPosition;
-    private Geometry.Point previousRedMalletPosition;
 
     private Geometry.Point blueMalletPosition;
     private Geometry.Point previousBlueMalletPosition;
@@ -177,7 +176,6 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         blueMalletPosition = new Geometry.Point(0f, 0f, 0.4f);
         previousBlueMalletPosition = blueMalletPosition;
         redMalletPosition = new Geometry.Point(0f, 0f, -0.4f);
-        previousRedMalletPosition = redMalletPosition;
 
         puckPosition = new Geometry.Point(0f, 0f, 0f);
         puckVector = new Geometry.Vector(0f, 0f, 0f);
