@@ -89,6 +89,12 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
     OpenGlRenderer(Context context, int theme){
         this.context = context;
         this.theme = theme;
+
+        blueMalletPosition = new Geometry.Point(0f, 0f, 0.4f);
+        previousBlueMalletPosition = blueMalletPosition;
+        redMalletPosition = new Geometry.Point(0f, 0f, -0.4f);
+        puckPosition = new Geometry.Point(0f, 0f, 0f);
+        puckVector = new Geometry.Vector(0f, 0f, 0f);
     }
 
     private void positionObjectInScene(float x, float y, float z){
@@ -172,13 +178,6 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         table = new Table(1.35f);
         mallet = new Mallet( 0.08f, 0.1f, 32);
         puck = new Puck(0.08f, 0.03f, 32);
-
-        blueMalletPosition = new Geometry.Point(0f, 0f, 0.4f);
-        previousBlueMalletPosition = blueMalletPosition;
-        redMalletPosition = new Geometry.Point(0f, 0f, -0.4f);
-
-        puckPosition = new Geometry.Point(0f, 0f, 0f);
-        puckVector = new Geometry.Vector(0f, 0f, 0f);
 
         textureShaderProgram = new TextureShaderProgram(context);
         uniformColorShaderProgram = new UniformColorShaderProgram(context);

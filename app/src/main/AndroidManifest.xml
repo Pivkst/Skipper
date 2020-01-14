@@ -10,14 +10,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:testOnly = "false">
-        <activity android:name=".OpenGLActivity">
+        <activity android:name=".OpenGLActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
             </intent-filter>
         </activity>
-        <activity
-            android:name=".MainActivity"
+        <activity android:name=".MainActivity"
+
             android:windowSoftInputMode="stateUnchanged"> <!-- this prevents the virtual keyboard from opening up automatically -->
         </activity>
         <activity android:name=".MenuActivity">

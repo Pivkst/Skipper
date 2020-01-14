@@ -15,6 +15,7 @@ import static com.example.skipper.Constants.LIGHT_THEME;
 public class OpenGLActivity extends AppCompatActivity {
     private GLSurfaceView glSurfaceView;
     private boolean renderer_set = false;
+    private OpenGlRenderer openGlRenderer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,7 +25,7 @@ public class OpenGLActivity extends AppCompatActivity {
         Intent intent = getIntent();
         int type = intent.getIntExtra("TYPE", AIR_HOCKEY);
         int theme = intent.getIntExtra("THEME", LIGHT_THEME);
-        final OpenGlRenderer openGlRenderer = new OpenGlRenderer(this, theme);
+        openGlRenderer = new OpenGlRenderer(this, theme);
 
         switch(type){
             case AIR_HOCKEY: glSurfaceView.setRenderer(openGlRenderer); break;
