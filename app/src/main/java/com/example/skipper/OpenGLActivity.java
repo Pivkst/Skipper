@@ -1,5 +1,6 @@
 package com.example.skipper;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -11,12 +12,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import static com.example.skipper.Constants.AIR_HOCKEY;
 import static com.example.skipper.Constants.LIGHT_THEME;
+import static com.example.skipper.Constants.SHREK;
 
 public class OpenGLActivity extends AppCompatActivity {
     private GLSurfaceView glSurfaceView;
     private boolean renderer_set = false;
     private OpenGlRenderer openGlRenderer;
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,7 +32,7 @@ public class OpenGLActivity extends AppCompatActivity {
 
         switch(type){
             case AIR_HOCKEY: glSurfaceView.setRenderer(openGlRenderer); break;
-            default: glSurfaceView.setRenderer(new ShrekRenderer(this)); break;
+            case SHREK: glSurfaceView.setRenderer(new ShrekRenderer(this)); break;
         }
         renderer_set = true;
         setContentView(glSurfaceView);
@@ -37,28 +40,26 @@ public class OpenGLActivity extends AppCompatActivity {
         glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if(event == null) return false;
                 final float normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
                 final float normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
-                if(event != null) {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                        glSurfaceView.queueEvent(new Runnable() {
-                            @Override
-                            public void run() {
-                                openGlRenderer.handleTouchPress(normalizedX, normalizedY);
-                            }
-                        });
-                    } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                        glSurfaceView.queueEvent(new Runnable() {
-                            @Override
-                            public void run() {
-                                openGlRenderer.handleTouchDrag(normalizedX, normalizedY);
-                            }
-                        });
-                    }
-                    return true;
-                } else return false;
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    glSurfaceView.queueEvent(new Runnable() {
+                        @Override
+                        public void run() {
+                            openGlRenderer.handleTouchPress(normalizedX, normalizedY);
+                        }
+                    });
+                } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    glSurfaceView.queueEvent(new Runnable() {
+                        @Override
+                        public void run() {
+                            openGlRenderer.handleTouchDrag(normalizedX, normalizedY);
+                        }
+                    });
+                }
+                return true;
             }
-
         });
     }
 

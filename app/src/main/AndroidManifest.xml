@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.skipper">
 
     <application
@@ -9,7 +10,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:testOnly = "false">
+        android:testOnly = "false"
+        tools:ignore="AllowBackup">
         <activity android:name=".OpenGLActivity"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
@@ -17,7 +19,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity"
-
             android:windowSoftInputMode="stateUnchanged"> <!-- this prevents the virtual keyboard from opening up automatically -->
         </activity>
         <activity android:name=".MenuActivity">
