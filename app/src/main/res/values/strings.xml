@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Skipper</string>
+    <string name="toast_text">button clicked</string>
+    <string name="placeHolderText">some text</string>
+    <string name="title_activity_shrek">shrek</string>
+    <string name="change_log">
+        -Add menu system
+        -Add extras
+        -Add rounded tops to mallets
+        -Add dark theme
+        -Fix mallet clipping outside
+        -Fix table scaling
+        -Remove title bar
+        #TODO
+        -Add limit to mallet speed
+        -Added better background
+        -Improve control scheme
+        -Fix puck sticking to mallet
+    </string>
+</resources>
