@@ -10,9 +10,10 @@
         -Add dark theme
         -Add new control scheme
         -Add limit to mallet speed
-        -Fix mallet clipping outside
+        -Fix mallet clipping outside play area
         -Fix table scaling
         -Fix puck sticking to mallet
+        -Fix game state resetting on screen orientation change
         -Remove title bar
         #TODO
         -Added better background
