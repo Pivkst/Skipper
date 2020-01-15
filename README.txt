@@ -1,4 +1,4 @@
-Video demonstrating the application:
+﻿Video demonstrating the application: https://www.youtube.com/watch?v=iFZdrYLyvJU
 
 Apk that enables quick testing: https://drive.google.com/file/d/1765G15nUCBMvL_62SkKy6xkJIxyU_YkD/view?fbclid=IwAR2zMz8rknBbegbySCDFJ81s2Y6sr-VLrTztxxWXbxrbmmJAH2te6JX6YM4
 
