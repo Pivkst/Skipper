@@ -65,7 +65,13 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
     private Mallet mallet;
     private Puck puck;
 
+    private final float farBound = -0.8f;
+    private final float nearBound = 0.8f;
     private int[] score = {0, 0}; //Blue and red's score in that order
+
+    private final float[] redColor = {1, 0, 0, 1};
+    private final float[] blueColor = {0, 0, 1, 1};
+    private final float[] grayColor = {0.5f, 0.5f, 0.5f, 1};
 
     private boolean malletPressed = false;
     private Geometry.Point redMalletPosition;
@@ -144,8 +150,6 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         final float puckSlideSpeedLossFactor = 0.99f;
         final float leftBound = -0.5f;
         final float rightBound = 0.5f;
-        final float farBound = -0.8f;
-        final float nearBound = 0.8f;
         final float goalWidth = 0.4f;
 
         //Move mallet
@@ -261,6 +265,11 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         glDrawArrays(GL_POINTS, 0, 1);
     }
 
+    private void displayScore(){
+        draw3DPoint(new Geometry.Point(0.168f - (0.168f*2/9) * score[0], 0.02f, nearBound), 0.02f, redColor);
+        draw3DPoint(new Geometry.Point(-0.168f + (0.168f*2/9) * score[1], 0.02f, farBound), 0.02f, redColor);
+    }
+
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         if(theme == DARK_THEME) glClearColor(0f, 0f, 0f, 0f);
@@ -329,34 +338,30 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         varyingColorShaderProgram.useProgram();
         varyingColorShaderProgram.setUniforms(modelViewProjectionMatrix, 10f);
         //Puck
-        final float[] color = {0.5f, 0.5f, 0.5f, 1f};
         positionObjectInScene(puckPosition);
         uniformColorShaderProgram.useProgram();
-        uniformColorShaderProgram.setUniforms(modelViewProjectionMatrix, color,10f);
+        uniformColorShaderProgram.setUniforms(modelViewProjectionMatrix, grayColor,10f);
         puck.bindData(uniformColorShaderProgram);
         puck.draw();
 
         //Red mallet (near)
-        color[0] = 1f;
-        color[1] = 0f;
-        color[2] = 0f;
         positionObjectInScene(redMalletPosition);
         uniformColorShaderProgram.useProgram();
-        uniformColorShaderProgram.setUniforms(modelViewProjectionMatrix, color,10f);
+        uniformColorShaderProgram.setUniforms(modelViewProjectionMatrix, redColor,10f);
         mallet.bindData(uniformColorShaderProgram);
         mallet.draw();
-        draw3DPoint(redMalletPosition.translateY(mallet.height), mallet.radius/2, color);
+        draw3DPoint(redMalletPosition.translateY(mallet.height), mallet.radius/2,redColor);
         //drawTableBorder(color);
 
         //Blue mallet (far)
-        color[0] = 0f;
-        color[2] = 1f;
         positionObjectInScene(blueMalletPosition);
         uniformColorShaderProgram.useProgram();
-        uniformColorShaderProgram.setUniforms(modelViewProjectionMatrix, color,10f);
+        uniformColorShaderProgram.setUniforms(modelViewProjectionMatrix, blueColor,10f);
         mallet.bindData(uniformColorShaderProgram);
         mallet.draw();
-        draw3DPoint(blueMalletPosition.translateY(mallet.height), mallet.radius/2, color);
+        draw3DPoint(blueMalletPosition.translateY(mallet.height), mallet.radius/2, blueColor);
+
+        displayScore();
         //wait();
     }
 
