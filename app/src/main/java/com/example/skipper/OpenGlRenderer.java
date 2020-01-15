@@ -166,7 +166,7 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
 
         //Move puck
         puckPosition = puckPosition.translate(puckVector);
-            //Collision with mallet
+            //Collision with blue mallet
         float distanceBetweenObjects = vectorBetween(blueMalletPosition, puckPosition).length();
         if(distanceBetweenObjects < (puck.radius + mallet.radius)){
             puckPosition = puckPosition.translate(puckVector.scale(-(puck.radius + mallet.radius)-distanceBetweenObjects*2)); //Move puck outside collision
@@ -175,6 +175,16 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
                     .rebound(hitVector) //Reflect the momentum of the puck
                     .add(hitVector.scale(malletMoveVector.length()/hitVector.length())) //Add the momentum of the mallet
                     .scale(puckReboundSpeedLossFactor); //Drop some momentum
+        }
+            //Collision with red mallet
+        distanceBetweenObjects = vectorBetween(redMalletPosition, puckPosition).length();
+        if(distanceBetweenObjects < (puck.radius + mallet.radius)){
+            puckPosition = puckPosition.translate(puckVector.scale(-(puck.radius + mallet.radius)-distanceBetweenObjects*2)); //Move puck outside collision
+            Geometry.Vector hitVector = vectorBetween(redMalletPosition, puckPosition);
+            puckVector = puckVector
+                    .rebound(hitVector) //Reflect the momentum of the puck
+                    .add(hitVector.scale(malletMoveVector.length()/hitVector.length())) //Add the momentum of the mallet
+                    .scale(puckReboundSpeedLossFactor+0.3f); //Drop some momentum
         }
             //Collision with wall or goal
         if(puckPosition.x < leftBound+puck.radius || puckPosition.x > rightBound-puck.radius){
