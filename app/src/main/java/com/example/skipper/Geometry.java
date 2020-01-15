@@ -1,5 +1,9 @@
 package com.example.skipper;
 
+import android.util.Log;
+
+import org.jetbrains.annotations.NotNull;
+
 public class Geometry {
     public static class Point{
         public final float x, y, z;
@@ -12,7 +16,7 @@ public class Geometry {
         public Point translateY(float distance){
             return new Point(x, y+distance, z);
         }
-        public Point translate(Vector vector){
+        Point translate(Vector vector){
             return new Point(
                     x + vector.x,
                     y + vector.y,
@@ -30,6 +34,7 @@ public class Geometry {
             this.radius = radius;
         }
 
+        @SuppressWarnings("unused")
         public Circle scale(float scale){
             return new Circle(center, radius*scale);
         }
@@ -48,8 +53,8 @@ public class Geometry {
     }
 
     public static class Sphere{
-        public final Point center;
-        public final float radius;
+        final Point center;
+        final float radius;
 
         public Sphere(Point center, float radius) {
             this.center = center;
@@ -57,30 +62,36 @@ public class Geometry {
         }
     }
 
-    public static class Ray{
-        public final Point point;
-        public final Vector vector;
+    static class Ray{
+        final Point point;
+        final Vector vector;
 
-        public Ray(Point point, Vector vector) {
+        Ray(Point point, Vector vector) {
             this.point = point;
             this.vector = vector;
         }
     }
 
-    public static class Vector{
-        public final float x, y, z;
+    static class Vector{
+        final float x, y, z;
 
-        public Vector(float x, float y, float z) {
+        Vector(float x, float y, float z) {
             this.x = x;
             this.y = y;
             this.z = z;
         }
 
-        public float length(){
+        @NotNull
+        @Override
+        public String toString(){
+            return "x: "+x+" y: "+y+" z: "+z+" length:" +length();
+        }
+
+        float length(){
             return (float) Math.sqrt(x*x + y*y + z*z);
         }
 
-        public Vector crossProduct(Vector otherVector){
+        Vector crossProduct(Vector otherVector){
             return new Vector(
                     (y*otherVector.z) - (z*otherVector.y),
                     (z*otherVector.x) - (x*otherVector.z),
@@ -88,28 +99,62 @@ public class Geometry {
             );
         }
 
-        public float dotProduct(Vector other){
+        float dot(Vector other){
             return x * other.x + y * other.y + z * other.z;
         }
 
-        public Vector scale(float f){
+        Vector scale(float f){
             return new Vector(x*f, y*f, z*f);
+        }
+
+        Vector add(Vector a){
+            return new Vector(x+a.x, y+a.y, z+a.z);
+        }
+
+        private Float scalarProjection(Vector b){
+            return this.dot(b) / b.length();
+        }
+
+        private Vector vectorProjection(Vector b){
+            return b.scale((this.dot(b) / b.dot(b)));
+        }
+
+        Vector rebound(Vector n){
+            //Rebounds this vector off a plane with a normal of n if it's pointing towards it
+            //If the projection of this on the normal and the normal are not codirectional(if the
+            // the scalar projection of this onto b is negative)
+            // https://en.wikipedia.org/wiki/Vector_projection
+            if(scalarProjection(n) < 0){
+                //Reverse the component of this vector which is colinear with b
+                Log.v("REBOUND", "Occurred");
+                return this.add(vectorProjection(n).scale(-2));
+            } else{
+                Log.v("REBOUND", "Ignored");
+                return this;
+            }
         }
     }
 
-    public static Vector vectorBetween(Point from, Point to){
+    static Vector vectorBetween(Point from, Point to){
         return new Vector(
                 to.x - from.x,
                 to.y - from.y,
                 to.z - from.z);
     }
 
+    static void divideByW(float[] vector){
+        vector[0] /= vector[3];
+        vector[1] /= vector[3];
+        vector[2] /= vector[3];
+    }
+
+    @SuppressWarnings("unused")
     public static boolean intersects(Sphere sphere, Ray ray){
         float distance = distanceBetween(sphere.center, ray);
         return  distance < sphere.radius;
     }
 
-    public static float distanceBetween(Point point, Ray ray){
+    private static float distanceBetween(Point point, Ray ray){
         //Basically math magic that I could not give less of a shit about right now
         // see: http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
         Vector p1ToPoint = vectorBetween(ray.point, point);
@@ -119,21 +164,20 @@ public class Geometry {
         return areaOfTriangleTimesTwo / lengthOfBase;
     }
 
-    public static class Plane{
-        public final Point point;
-        public final Vector normal;
+    static class Plane{
+        final Point point;
+        final Vector normal;
 
-        public Plane(Point point, Vector normal) {
+        Plane(Point point, Vector normal) {
             this.point = point;
             this.normal = normal;
         }
     }
 
-    public static Point intersectionPoint(Ray ray, Plane plane){
+    static Point intersectionPoint(Ray ray, Plane plane){
         // https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
         Vector rayToPlaneVector = vectorBetween(ray.point, plane.point);
-        float scaleFactor = rayToPlaneVector.dotProduct(plane.normal) / ray.vector.dotProduct(plane.normal);
-        Point interSectionPoint = ray.point.translate(ray.vector.scale(scaleFactor));
-        return interSectionPoint;
+        float scaleFactor = rayToPlaneVector.dot(plane.normal) / ray.vector.dot(plane.normal);
+        return ray.point.translate(ray.vector.scale(scaleFactor));
     }
 }

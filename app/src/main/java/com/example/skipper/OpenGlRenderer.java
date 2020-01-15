@@ -42,13 +42,14 @@ import static android.opengl.Matrix.setIdentityM;
 import static android.opengl.Matrix.setLookAtM;
 import static android.opengl.Matrix.translateM;
 import static com.example.skipper.Constants.DARK_THEME;
+import static com.example.skipper.Geometry.divideByW;
 import static com.example.skipper.Geometry.intersectionPoint;
-import static com.example.skipper.Geometry.intersects;
 import static com.example.skipper.Geometry.vectorBetween;
 
 public class OpenGlRenderer implements GLSurfaceView.Renderer {
     private final Context context;
 
+    @SuppressWarnings("unused")
     private int frameCounter = 0;
 
     private final float[] projectionMatrix = new float[16];
@@ -64,16 +65,12 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
     private Mallet mallet;
     private Puck puck;
 
-    private final float leftBound = -0.5f;
-    private final float rightBound =  0.5f;
-    private final float farBound = -0.8f;
-    private final float nearBound =  0.8f;
-
     private boolean malletPressed = false;
     private Geometry.Point redMalletPosition;
 
     private Geometry.Point blueMalletPosition;
     private Geometry.Point previousBlueMalletPosition;
+    private Geometry.Point blueMalletTargetPosition;
 
     private Geometry.Point puckPosition;
     private Geometry.Vector puckVector;
@@ -112,43 +109,93 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         positionObjectInScene(point.x, point.y, point.z);
     }
 
-    void handleTouchPress(float normalizedX, float normalizedY){
+    private void setBlueMalletTargetPosition(Geometry.Point point){
+        blueMalletTargetPosition = point;
+    }
+
+    private Geometry.Point getTouchPosition(float normalizedX, float normalizedY){
         Geometry.Ray ray = convertNormalized2DPointToRay(normalizedX, normalizedY);
-        Geometry.Sphere malletBoundingSphere = new Geometry.Sphere(
-                new Geometry.Point(
-                        blueMalletPosition.x,
-                        blueMalletPosition.y,
-                        blueMalletPosition.z),
-                mallet.height/2f);
-        malletPressed = intersects(malletBoundingSphere, ray);
-        //if(malletPressed) Log.v("TOUCH", "That's it! I'm gonna go get me mallet.");
+        //Define a plane representing the table
+        Geometry.Plane plane = new Geometry.Plane(new Geometry.Point(0f, 0f, 0f), new Geometry.Vector(0f, 1f, 0f));
+        return intersectionPoint(ray, plane);
+    }
+
+    void handleTouchPress(float normalizedX, float normalizedY){
+        setBlueMalletTargetPosition(getTouchPosition(normalizedX, normalizedY));
+        malletPressed = true;
     }
 
     void handleTouchDrag(float normalizedX, float normalizedY){
         if(malletPressed){
-            Geometry.Ray ray = convertNormalized2DPointToRay(normalizedX, normalizedY);
-            //Define a plane representing the table
-            Geometry.Plane plane = new Geometry.Plane(new Geometry.Point(0f, 0f, 0f), new Geometry.Vector(0f, 1f, 0f));
-            Geometry.Point touchedPoint = intersectionPoint(ray, plane);
-            float distance = vectorBetween(blueMalletPosition, puckPosition).length();
-            if(distance < (puck.radius + mallet.radius)) {puckVector = vectorBetween(previousBlueMalletPosition, blueMalletPosition);}
-            previousBlueMalletPosition = blueMalletPosition;
-            blueMalletPosition = new Geometry.Point(
-                    clamp(touchedPoint.x, leftBound+mallet.radius, rightBound-mallet.radius),
-                    0f,
-                    clamp(touchedPoint.z, mallet.radius, nearBound-mallet.radius)
-            );
+            setBlueMalletTargetPosition(getTouchPosition(normalizedX, normalizedY));
         }
+    }
+
+    void handleTouchRelease(){
+        malletPressed = false;
+    }
+
+    private void doPhysics(){
+        final float malletMaxSpeed = 0.1f;
+        final float puckMaxSpeed = 0.2f;
+        final float puckReboundSpeedLossFactor = 0.95f;
+        final float puckSlideSpeedLossFactor = 0.99f;
+        final float leftBound = -0.5f;
+        final float rightBound =  0.5f;
+        final float farBound = -0.8f;
+        final float nearBound =  0.8f;
+
+        //Move mallet
+        if(malletPressed){
+            Geometry.Vector vectorToTouchPosition = vectorBetween(previousBlueMalletPosition, blueMalletTargetPosition);
+            blueMalletPosition = (vectorToTouchPosition.length() > malletMaxSpeed) ?
+                    previousBlueMalletPosition.translate(vectorToTouchPosition.scale(malletMaxSpeed/vectorToTouchPosition.length())) :
+                    blueMalletTargetPosition;
+        }
+            //Clamp mallet
+        blueMalletPosition = new Geometry.Point(
+                clamp(blueMalletPosition.x, leftBound+mallet.radius, rightBound-mallet.radius),
+                0f,
+                clamp(blueMalletPosition.z, mallet.radius, nearBound-mallet.radius)
+        );
+        Geometry.Vector malletMoveVector = vectorBetween(previousBlueMalletPosition, blueMalletPosition);
+        previousBlueMalletPosition = blueMalletPosition;
+
+        //Move puck
+        puckPosition = puckPosition.translate(puckVector);
+            //Collision
+        float distanceBetweenObjects = vectorBetween(blueMalletPosition, puckPosition).length();
+        if(distanceBetweenObjects < (puck.radius + mallet.radius)){
+            puckPosition = puckPosition.translate(puckVector.scale(-(puck.radius + mallet.radius)-distanceBetweenObjects*2)); //Move puck outside collision
+            Geometry.Vector hitVector = vectorBetween(blueMalletPosition, puckPosition);
+            puckVector = puckVector
+                    .rebound(hitVector) //Reflect the momentum of the puck
+                    .add(hitVector.scale(malletMoveVector.length()/hitVector.length())) //Add the momentum of the mallet
+                    .scale(puckReboundSpeedLossFactor); //Drop some momentum
+        }
+            //Rebound puck
+        if(puckPosition.x<leftBound+puck.radius || puckPosition.x>rightBound-puck.radius){
+            puckVector = puckVector.scale(puckReboundSpeedLossFactor);
+            puckVector = new Geometry.Vector(-puckVector.x,puckVector.y,puckVector.z);
+        }if(puckPosition.z<farBound+puck.radius || puckPosition.z>nearBound-puck.radius){
+            puckVector = puckVector.scale(puckReboundSpeedLossFactor);
+            puckVector = new Geometry.Vector(puckVector.x,puckVector.y,-puckVector.z);
+        }
+            //Clamp puck
+        puckPosition=new Geometry.Point(
+                clamp(puckPosition.x,leftBound+puck.radius,rightBound-puck.radius),
+                puckPosition.y,
+                clamp(puckPosition.z,farBound+puck.radius,nearBound-puck.radius)
+        );
+            //Slow down puck due to drag
+        puckVector = puckVector.scale(puckSlideSpeedLossFactor);
+            //Clamp puck speed
+        if(puckVector.length()>puckMaxSpeed)
+            puckVector = puckVector.scale(puckMaxSpeed/puckVector.length());
     }
 
     private float clamp(float value, float min, float max){
         return Math.min(max, Math.max(value, min));
-    }
-
-    private void divideByW(float[] vector){
-        vector[0] /= vector[3];
-        vector[1] /= vector[3];
-        vector[2] /= vector[3];
     }
 
     private Geometry.Ray convertNormalized2DPointToRay(float normalizedX, float normalizedY){
@@ -169,6 +216,16 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         Geometry.Point nearPointRay = new Geometry.Point(nearPointWorld[0], nearPointWorld[1], nearPointWorld[2]);
         Geometry.Point farPointRay = new Geometry.Point(farPointWorld[0], farPointWorld[1], farPointWorld[2]);
         return new Geometry.Ray(nearPointRay, vectorBetween(nearPointRay, farPointRay));
+    }
+
+    private void draw3DPoint(Geometry.Point point, float radius, float[] color){
+        float apery = 1.2020569f;
+        float[] vertexData = {point.x, point.y, point.z};
+        VertexArray vertexArray = new VertexArray(vertexData);
+        circleShaderProgram.useProgram();
+        circleShaderProgram.setUniforms(viewProjectionMatrix, color, radius*apery*2f*width/aspect);
+        vertexArray.setVertexAttribPointer(0, circleShaderProgram.getPositionAttributeLocation(), 3, 0);
+        glDrawArrays(GL_POINTS, 0, 1);
     }
 
     @Override
@@ -219,20 +276,7 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         glLineWidth(5f);
         frameCounter++;
         //Game logic
-        puckPosition = puckPosition.translate(puckVector);
-        if(puckPosition.x<leftBound+puck.radius ||puckPosition.x>rightBound-puck.radius){
-            puckVector=puckVector.scale(0.9f);
-            puckVector=new Geometry.Vector(-puckVector.x,puckVector.y,puckVector.z);
-        }if(puckPosition.z<farBound+puck.radius||puckPosition.z>nearBound-puck.radius){
-            puckVector=puckVector.scale(0.9f);
-            puckVector=new Geometry.Vector(puckVector.x,puckVector.y,-puckVector.z);
-        }
-        puckPosition=new Geometry.Point(
-                clamp(puckPosition.x,leftBound+puck.radius,rightBound-puck.radius),
-                puckPosition.y,
-                clamp(puckPosition.z,farBound+puck.radius,nearBound-puck.radius)
-        );
-        puckVector=puckVector.scale(0.99f);
+        doPhysics();
 
         //View updates
         multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
@@ -280,18 +324,10 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         mallet.bindData(uniformColorShaderProgram);
         mallet.draw();
         draw3DPoint(blueMalletPosition.translateY(mallet.height), mallet.radius/2, color);
+        //wait();
     }
 
-    private void draw3DPoint(Geometry.Point point, float radius, float[] color){
-        float apery = 1.2020569f;
-        float[] vertexData = {point.x, point.y, point.z};
-        VertexArray vertexArray = new VertexArray(vertexData);
-        circleShaderProgram.useProgram();
-        circleShaderProgram.setUniforms(viewProjectionMatrix, color, radius*apery*2f*width/aspect);
-        vertexArray.setVertexAttribPointer(0, circleShaderProgram.getPositionAttributeLocation(), 3, 0);
-        glDrawArrays(GL_POINTS, 0, 1);
-    }
-
+    @SuppressWarnings("unused")
     private void drawTableBorder(float[] color){
         float[] vertexData = {
                 -0.5f,0f, 0.8f,
@@ -310,5 +346,10 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         uniformColorShaderProgram.setUniforms(viewProjectionMatrix, color, 1f);
         vertexArray.setVertexAttribPointer(0, uniformColorShaderProgram.getPositionAttributeLocation(), 3, 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 10);
+    }
+
+    @SuppressWarnings("unused")
+    private void wait(int n){
+        try { Thread.sleep(n); } catch (InterruptedException e) { e.printStackTrace(); }
     }
 }

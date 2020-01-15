@@ -8,13 +8,13 @@
         -Add extras
         -Add rounded tops to mallets
         -Add dark theme
+        -Add new control scheme
+        -Add limit to mallet speed
         -Fix mallet clipping outside
         -Fix table scaling
+        -Fix puck sticking to mallet
         -Remove title bar
         #TODO
-        -Add limit to mallet speed
         -Added better background
-        -Improve control scheme
-        -Fix puck sticking to mallet
     </string>
 </resources>

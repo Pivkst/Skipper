@@ -43,20 +43,25 @@ public class OpenGLActivity extends AppCompatActivity {
                 if(event == null) return false;
                 final float normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
                 final float normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    glSurfaceView.queueEvent(new Runnable() {
+                switch(event.getAction()){
+                    case MotionEvent.ACTION_DOWN: glSurfaceView.queueEvent(new Runnable() {
                         @Override
                         public void run() {
                             openGlRenderer.handleTouchPress(normalizedX, normalizedY);
                         }
-                    });
-                } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                    glSurfaceView.queueEvent(new Runnable() {
+                    }); break;
+                    case MotionEvent.ACTION_MOVE: glSurfaceView.queueEvent(new Runnable() {
                         @Override
                         public void run() {
                             openGlRenderer.handleTouchDrag(normalizedX, normalizedY);
                         }
-                    });
+                    }); break;
+                    case MotionEvent.ACTION_UP: glSurfaceView.queueEvent(new Runnable() {
+                        @Override
+                        public void run() {
+                            openGlRenderer.handleTouchRelease();
+                        }
+                    }); break;
                 }
                 return true;
             }
