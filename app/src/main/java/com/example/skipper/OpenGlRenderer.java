@@ -65,6 +65,8 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
     private Mallet mallet;
     private Puck puck;
 
+    private int[] score = {0, 0}; //Blue and red's score in that order
+
     private boolean malletPressed = false;
     private Geometry.Point redMalletPosition;
 
@@ -87,9 +89,9 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         this.context = context;
         this.theme = theme;
 
-        blueMalletPosition = new Geometry.Point(0f, 0f, 0.4f);
+        blueMalletPosition = new Geometry.Point(0f, 0f, 0.6f);
         previousBlueMalletPosition = blueMalletPosition;
-        redMalletPosition = new Geometry.Point(0f, 0f, -0.4f);
+        redMalletPosition = new Geometry.Point(0f, 0f, -0.6f);
         puckPosition = new Geometry.Point(0f, 0f, 0f);
         puckVector = new Geometry.Vector(0f, 0f, 0f);
     }
@@ -141,9 +143,10 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         final float puckReboundSpeedLossFactor = 0.95f;
         final float puckSlideSpeedLossFactor = 0.99f;
         final float leftBound = -0.5f;
-        final float rightBound =  0.5f;
+        final float rightBound = 0.5f;
         final float farBound = -0.8f;
-        final float nearBound =  0.8f;
+        final float nearBound = 0.8f;
+        final float goalWidth = 0.4f;
 
         //Move mallet
         if(malletPressed){
@@ -163,7 +166,7 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
 
         //Move puck
         puckPosition = puckPosition.translate(puckVector);
-            //Collision
+            //Collision with mallet
         float distanceBetweenObjects = vectorBetween(blueMalletPosition, puckPosition).length();
         if(distanceBetweenObjects < (puck.radius + mallet.radius)){
             puckPosition = puckPosition.translate(puckVector.scale(-(puck.radius + mallet.radius)-distanceBetweenObjects*2)); //Move puck outside collision
@@ -173,13 +176,22 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
                     .add(hitVector.scale(malletMoveVector.length()/hitVector.length())) //Add the momentum of the mallet
                     .scale(puckReboundSpeedLossFactor); //Drop some momentum
         }
-            //Rebound puck
-        if(puckPosition.x<leftBound+puck.radius || puckPosition.x>rightBound-puck.radius){
+            //Collision with wall or goal
+        if(puckPosition.x < leftBound+puck.radius || puckPosition.x > rightBound-puck.radius){
             puckVector = puckVector.scale(puckReboundSpeedLossFactor);
-            puckVector = new Geometry.Vector(-puckVector.x,puckVector.y,puckVector.z);
-        }if(puckPosition.z<farBound+puck.radius || puckPosition.z>nearBound-puck.radius){
-            puckVector = puckVector.scale(puckReboundSpeedLossFactor);
-            puckVector = new Geometry.Vector(puckVector.x,puckVector.y,-puckVector.z);
+            puckVector = new Geometry.Vector(-puckVector.x, puckVector.y, puckVector.z);
+        }if(puckPosition.z < farBound+puck.radius){
+            if(puckPosition.x>(-goalWidth/2) && puckPosition.x<(goalWidth/2)) goal(true);
+            else{
+                puckVector = puckVector.scale(puckReboundSpeedLossFactor);
+                puckVector = new Geometry.Vector(puckVector.x, puckVector.y, -puckVector.z);
+            }
+        }if(puckPosition.z > nearBound-puck.radius){
+            if(puckPosition.x>(-goalWidth/2) && puckPosition.x<(goalWidth/2)) goal(false);
+            else{
+                puckVector = puckVector.scale(puckReboundSpeedLossFactor);
+                puckVector = new Geometry.Vector(puckVector.x, puckVector.y, -puckVector.z);
+            }
         }
             //Clamp puck
         puckPosition=new Geometry.Point(
@@ -192,6 +204,17 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
             //Clamp puck speed
         if(puckVector.length()>puckMaxSpeed)
             puckVector = puckVector.scale(puckMaxSpeed/puckVector.length());
+    }
+
+    private void goal(boolean scoreGoesToBlue){
+        if(scoreGoesToBlue) score[0]++;
+        else score[1]++;
+
+        blueMalletPosition = new Geometry.Point(0f, 0f, 0.6f);
+        previousBlueMalletPosition = blueMalletPosition;
+        redMalletPosition = new Geometry.Point(0f, 0f, -0.6f);
+        puckPosition = new Geometry.Point(0f, 0f, (scoreGoesToBlue) ? -0.2f : 0.2f);
+        puckVector = new Geometry.Vector(0f, 0f, 0f);
     }
 
     private float clamp(float value, float min, float max){
