@@ -4,6 +4,7 @@
     <string name="placeHolderText">some text</string>
     <string name="title_activity_shrek">shrek</string>
     <string name="change_log">
+        Version 4 - beta release 16.1.2020
         -Add menu system
         -Add extras
         -Add rounded tops to mallets
@@ -16,7 +17,15 @@
         -Fix puck sticking to mallet
         -Fix game state resetting on screen orientation change
         -Remove title bar
+
+        Version 5
+        -Add improved assets
+        -Add dark theme table
+
         #TODO
-        -Added better background
+        -Add better background
+        -Add AI
+        -Fix score counter going off screen
+        -Fix camera angle
     </string>
 </resources>

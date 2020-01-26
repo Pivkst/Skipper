@@ -272,9 +272,16 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        if(theme == DARK_THEME) glClearColor(0f, 0f, 0f, 0f);
-        else glClearColor(0.4f, 0.6f, 0.4f, 0.0f);
-        table = new Table(1.35f);
+        if(theme == DARK_THEME){
+            glClearColor(0f, 0f, 0f, 0f);
+            texture = TextureHelper.loadTexture(context, R.drawable.air_hockey_dark);
+        }
+        else{
+            glClearColor(0.4f, 0.6f, 0.4f, 0.0f);
+            texture = TextureHelper.loadTexture(context, R.drawable.air_hockey_light);
+        }
+        //table = new Table(1.35f);
+        table = new Table(1.08f);
         mallet = new Mallet( 0.08f, 0.1f, 32);
         puck = new Puck(0.08f, 0.03f, 32);
 
@@ -283,7 +290,7 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         varyingColorShaderProgram = new VaryingColorShaderProgram(context);
         circleShaderProgram = new CircleShaderProgram(context);
 
-        texture = TextureHelper.loadTexture(context, R.drawable.air_hockey_surface2);
+
         texture2 = TextureHelper.loadTexture(context, R.drawable.adonkeh);
 
         glEnable(GL_DEPTH_TEST);
@@ -351,7 +358,7 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
         mallet.bindData(uniformColorShaderProgram);
         mallet.draw();
         draw3DPoint(redMalletPosition.translateY(mallet.height), mallet.radius/2,redColor);
-        //drawTableBorder(color);
+        //drawTableBorder(redColor);
 
         //Blue mallet (far)
         positionObjectInScene(blueMalletPosition);
@@ -368,16 +375,16 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
     @SuppressWarnings("unused")
     private void drawTableBorder(float[] color){
         float[] vertexData = {
-                -0.5f,0f, 0.8f,
-                -0.5f,0.05f, 0.8f,
-                0.5f,0f, 0.8f,
-                0.5f,0.05f, 0.8f,
-                0.5f,0f,-0.8f,
-                0.5f,0.05f,-0.8f,
-                -0.5f,0f,-0.8f,
-                -0.5f,0.05f,-0.8f,
-                -0.5f,0f, 0.8f,
-                -0.5f,0.05f, 0.8f
+                -0.5f,   0f, 0.8f,
+                -0.5f,0.02f, 0.8f,
+                 0.5f,   0f, 0.8f,
+                 0.5f,0.02f, 0.8f,
+                 0.5f,   0f,-0.8f,
+                 0.5f,0.02f,-0.8f,
+                -0.5f,   0f,-0.8f,
+                -0.5f,0.02f,-0.8f,
+                -0.5f,   0f, 0.8f,
+                -0.5f,0.02f, 0.8f
         };
         VertexArray vertexArray = new VertexArray(vertexData);
         uniformColorShaderProgram.useProgram();

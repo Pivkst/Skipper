@@ -24,7 +24,7 @@ public class Table {
 
     public Table(float scale){
         float width = 1;
-        float length = 1.5f;
+        float length = 1.6f;
         float leftX = -width/2 * scale;
         float rightX = width/2 * scale;
         float farZ = -length/2 * scale;
